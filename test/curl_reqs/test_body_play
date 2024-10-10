@@ -1,0 +1,23 @@
+{
+  "device": {
+    "deviceId": "12133",
+    "deviceType": "rootdevice",
+    "deviceIP": "192.168.1.123"
+  },
+  "AVaction": "Play",
+  "AVInstanceID": "0000",
+  "AVCurrentURI": "http://192.168.0.212:8000/media/video/test.mp4",
+  "argList": [
+    {
+      "key": "InstanceID",
+      "value": "0000"
+    },
+    {
+      "key": "CurrentURI",
+      "value": "http://192.168.0.212:8000/media/video/test.mp4"
+    }
+  ],
+  "AVfilepath": "wefwfw",
+  "AVserviceType": "ewfew",
+  "AVCurrentURIMetadata": "dsfew"
+}
