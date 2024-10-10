@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+    <specVersion>
+        <major>1</major>
+        <minor>0</minor>
+    </specVersion>
+    <device>
+        <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>
+        <friendlyName>My Media Server</friendlyName>
+        <manufacturer>My Company</manufacturer>
+        <manufacturerURL>http://www.mycompany.com</manufacturerURL>
+        <modelDescription>A sample media server</modelDescription>
+        <modelName>MediaServerModel</modelName>
+        <modelNumber>1.0</modelNumber>
+        <modelURL>http://www.mycompany.com/models/MediaServerModel</modelURL>
+        <serialNumber>123456789</serialNumber>
+        <UDN>uuid:unique-device-identifier</UDN>
+        <serviceList>
+            <service>
+                <serviceType>urn:schemas-upnp-org:service:ContentDirectory:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:ContentDirectory</serviceId>
+                <SCPDURL>/scpd/ContentDirectory.xml</SCPDURL>
+                <controlURL>/upnp/control/ContentDirectory</controlURL>
+                <eventSubURL>/upnp/event/ContentDirectory</eventSubURL>
+            </service>
+            <service>
+                <serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+                <SCPDURL>/scpd/ConnectionManager.xml</SCPDURL>
+                <controlURL>/upnp/control/ConnectionManager</controlURL>
+                <eventSubURL>/upnp/event/ConnectionManager</eventSubURL>
+            </service>
+        </serviceList>
+        <presentationURL>http://192.168.1.1/presentation</presentationURL>
+    </device>
+</root>

@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+  <specVersion>
+    <major>1</major>
+    <minor>0</minor>
+  </specVersion>
+  <device>
+    <deviceType>urn:schemas-upnp-org:device:MediaRenderer:1</deviceType>
+    <friendlyName>My Media Renderer</friendlyName>
+    <manufacturer>My Company</manufacturer>
+    <manufacturerURL>http://www.mycompany.com</manufacturerURL>
+    <modelDescription>My Media Renderer Model</modelDescription>
+    <modelName>My Model</modelName>
+    <modelNumber>1</modelNumber>
+    <modelURL>http://www.mycompany.com/model</modelURL>
+    <serialNumber>1234567890</serialNumber>
+    <UDN>uuid:my-unique-id</UDN>
+    <iconList>
+      <icon>
+        <mimetype>image/png</mimetype>
+        <width>64</width>
+        <height>64</height>
+        <depth>24</depth>
+        <url>icon.png</url>
+      </icon>
+    </iconList>
+    <serviceList>
+      <service>
+        <serviceType>urn:schemas-upnp-org:service:RenderingControl:1</serviceType>
+        <serviceId>urn:upnp-org:serviceId:RenderingControl</serviceId>
+        <SCPDURL>/RenderingControlSCPD.xml</SCPDURL>
+        <controlURL>/upnp/control/RenderingControl1</controlURL>
+        <eventSubURL>/upnp/event/RenderingControl1</eventSubURL>
+      </service>
+      <service>
+        <serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+        <serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+        <SCPDURL>/ConnectionManagerSCPD.xml</SCPDURL>
+        <controlURL>/upnp/control/ConnectionManager1</controlURL>
+        <eventSubURL>/upnp/event/ConnectionManager1</eventSubURL>
+      </service>
+      <service>
+        <serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType>
+        <serviceId>urn:upnp-org:serviceId:AVTransport</serviceId>
+        <SCPDURL>/AVTransportSCPD.xml</SCPDURL>
+        <controlURL>/upnp/control/AVTransport1</controlURL>
+        <eventSubURL>/upnp/event/AVTransport1</eventSubURL>
+      </service>
+    </serviceList>
+  </device>
+</root>
