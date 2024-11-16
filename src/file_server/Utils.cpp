@@ -1,4 +1,4 @@
-
+#include <unistd.h>
 #include "Utils.hpp"
 
 #include <fstream>
@@ -7,6 +7,7 @@
 #include <iostream>
 #include <oatpp/core/Types.hpp>
 #include "oatpp/web/server/api/ApiController.hpp"
+#include <oatpp/core/base/Environment.hpp>
 
 
 const char* base_desc = R"xml(<?xml version="1.0"?>
@@ -39,22 +40,13 @@ const char* base_desc = R"xml(<?xml version="1.0"?>
 </root>)xml";
 
 
-
-int getContext(std::string filepath){
+int getMetadata(std::string filepath){
  // Open input file and allocate format context
-    AVFormatContext* format_ctx = nullptr;
-    if (avformat_open_input(&format_ctx, filepath.c_str(), nullptr, nullptr) < 0) {
-        std::cerr << "Could not open input file: " << filepath << std::endl;
-        return 2;
-    }
+     
+  AVFormatContext *format_ctx = NULL;
+  const AVDictionaryEntry *tag = NULL;
 
-    // Retrieve stream information
-    if (avformat_find_stream_info(format_ctx, nullptr) < 0) {
-        std::cerr << "Could not find stream information" << std::endl;
-        return 3;
-    }
-  OATPP_LOGI("filename:  " + oatpp::String(format_ctx->url), "bitrate: %s\t",format_ctx->bit_rate)
-  /*
+  
   // Find video stream
     int video_stream_idx = -1;
     for (unsigned int i = 0; i < format_ctx->nb_streams; ++i) {
@@ -71,11 +63,12 @@ int getContext(std::string filepath){
 
     // Get codec parameters and codec context
     AVCodecParameters* codecpar = format_ctx->streams[video_stream_idx]->codecpar;
-    AVCodec* codec = avcodec_find_decoder(codecpar->codec_id);
+    const AVCodec* codec = avcodec_find_decoder(codecpar->codec_id);
     AVCodecContext* codec_ctx = avcodec_alloc_context3(codec);
     avcodec_parameters_to_context(codec_ctx, codecpar);
+    avcodec_free_context(&codec_ctx);
 // tmr  we test out a video file, 
-*/
+
 return 0;
 }
 
@@ -267,7 +260,7 @@ void printDocs(IXML_Document *doc){
 int UPnPDeviceManager::sendUpnpAction(const char* actionUrl, const char* serviceType, IXML_Document* actionDoc) {
     IXML_Document* responseDoc = nullptr;
     int result = UpnpSendAction(handle, actionUrl, serviceType, nullptr, actionDoc, &responseDoc);
-
+    sleep(3);
     if (result == UPNP_E_SUCCESS) {
         std::cout << "Action sent successfully." << std::endl;
         char* responseStr = ixmlPrintDocument(responseDoc);
@@ -413,8 +406,29 @@ IXML_Document* createPlayDoc( const std::map<std::string, std::string>& args){
     return doc;
 }
 
+int getContext(const char* filepath){
+    AVFormatContext *fmt_ctx = NULL;
+    const AVDictionaryEntry *tag = NULL;
+    int ret;
+      if ((ret = avformat_open_input(&fmt_ctx, filepath, NULL, NULL)))
+        return ret;
+ 
+    if ((ret = avformat_find_stream_info(fmt_ctx, NULL)) < 0) {
+        av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
+        return ret;
+    }
+ 
+    while ((tag = av_dict_iterate(fmt_ctx->metadata, tag)))
+        printf("%s=%s\n", tag->key, tag->value);
+ 
+    avformat_close_input(&fmt_ctx);
+    return 1;
+
+
+}
 
 IXML_Document* createMetadataDocument(std::string fileuri, StaticFilesManager* fileMan) {
+   getContext(fileuri.c_str());
    oatpp::network::Url parsedURI = oatpp::network::Url::Parser::parseUrl(fileuri);
    std::string filepath = parsedURI.path->c_str();
 
@@ -431,7 +445,7 @@ IXML_Document* createMetadataDocument(std::string fileuri, StaticFilesManager* f
     ixmlNode_appendChild(&(didlLite->n), &(item->n));
 
     IXML_Element* title = ixmlDocument_createElement(doc, "dc:title");
-    IXML_Node* titleText = ixmlDocument_createTextNode(doc, "BiLight");
+    IXML_Node* titleText = ixmlDocument_createTextNode(doc, "bunny");
     ixmlNode_appendChild(&title->n, titleText);
     ixmlNode_appendChild(&item->n, &title->n);
 
@@ -442,10 +456,10 @@ IXML_Document* createMetadataDocument(std::string fileuri, StaticFilesManager* f
 
     IXML_Element* res = ixmlDocument_createElement(doc, "res");
     ixmlElement_setAttribute(res, "protocolInfo", 
-    "http-get:*:video/mp4:DLNA.ORG_PN=AVC_MP4_BL_L3L_SD_AAC;DLNA.ORG_CI=1;DLNA.ORG_FLAGS=01700000000000000000000000000000");
+    "http-get:*:video/mp4:DLNA.ORG_PN=AVC_MP4_BL_L3L_SD_AAC;DLNA.ORG_FLAGS=ED100000000000000000000000000000");
     ixmlElement_setAttribute(res, "sampleFrequency", "44100");
     //ixmlElement_setAttribute(res, "duration", "1:48:55.701");
-    ixmlElement_setAttribute(res, "bitrate", "327040");
+    ixmlElement_setAttribute(res, "bitrate", "664683");
     IXML_Node* resText = ixmlDocument_createTextNode(doc, "");
     ixmlNode_appendChild(&res->n, resText);
     ixmlNode_appendChild(&item->n, &res->n);
@@ -453,10 +467,10 @@ IXML_Document* createMetadataDocument(std::string fileuri, StaticFilesManager* f
 
     
     IXML_Element* upnpClass = ixmlDocument_createElement(doc, "upnp:class");
-    IXML_Node* classText = ixmlDocument_createTextNode(doc, "object.item.audioItem");
+    IXML_Node* classText = ixmlDocument_createTextNode(doc, "object.item.videoItem");
     ixmlNode_appendChild(&upnpClass->n, classText);
     ixmlNode_appendChild(&item->n, &upnpClass->n);
-    getContext(filepath);
+    
     return doc;
 
 
@@ -476,7 +490,7 @@ IXML_Document* createMetadataDocument() {
     ixmlNode_appendChild(&(didlLite->n), &(item->n));
 
     IXML_Element* title = ixmlDocument_createElement(doc, "dc:title");
-    IXML_Node* titleText = ixmlDocument_createTextNode(doc, "BiLight");
+    IXML_Node* titleText = ixmlDocument_createTextNode(doc, "bunny");
     ixmlNode_appendChild(&title->n, titleText);
     ixmlNode_appendChild(&item->n, &title->n);
 
@@ -503,20 +517,19 @@ sampleFrequency="44100" resolution="640x360">
   */
     IXML_Element* res = ixmlDocument_createElement(doc, "res");
     ixmlElement_setAttribute(res, "protocolInfo", 
-    "http-get:*:video/mp4:DLNA.ORG_PN=AVC_MP4_BL_L3L_SD_AAC;DLNA.ORG_CI=1;DLNA.ORG_FLAGS=01700000000000000000000000000000");
+    "http-get:*:video/mp4:DLNA.ORG_PN=AVC_MP4_BL_L3L_SD_AAC;DLNA.ORG_FLAGS=ED100000000000000000000000000000");
     ixmlElement_setAttribute(res, "sampleFrequency", "44100");
-    //ixmlElement_setAttribute(res, "duration", "1:48:55.701");
-    ixmlElement_setAttribute(res, "bitrate", "327040");
-    ixmlElement_setAttribute(res, "microsoft:codec", "{34363248-0000-0010-8000-00AA00389B71}");
+    ixmlElement_setAttribute(res, "duration", "00:01:00.701");
+    ixmlElement_setAttribute(res, "bitrate", "664683");
     ixmlElement_setAttribute(res, "resolution","640x360");
-    IXML_Node* resText = ixmlDocument_createTextNode(doc, "http://192.168.0.212:8001/media/audio/BisexualLight.mp3");
+    IXML_Node* resText = ixmlDocument_createTextNode(doc, "http://192.168.0.212:8000/media/video/big_buck_bunny.mp4");
     ixmlNode_appendChild(&res->n, resText);
     ixmlNode_appendChild(&item->n, &res->n);
 
 
     
     IXML_Element* upnpClass = ixmlDocument_createElement(doc, "upnp:class");
-    IXML_Node* classText = ixmlDocument_createTextNode(doc, "object.item.audioItem");
+    IXML_Node* classText = ixmlDocument_createTextNode(doc, "object.item.videoItem");
     ixmlNode_appendChild(&upnpClass->n, classText);
     ixmlNode_appendChild(&item->n, &upnpClass->n);
     return doc;

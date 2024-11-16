@@ -3,7 +3,7 @@
 #include "./AppComponent.hpp"
 
 #include "oatpp/network/Server.hpp"
-#include "upnp.h"
+#include "upnp/upnp.h"
 #include <iostream>
 
 

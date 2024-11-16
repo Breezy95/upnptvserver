@@ -1,7 +1,7 @@
 #include "oatpp/core/macro/codegen.hpp"
 #include "oatpp/core/Types.hpp"
 
-#include "Utils.hpp"
+#include "../file_server/Utils.hpp"
 
 #include OATPP_CODEGEN_BEGIN(DTO)
 

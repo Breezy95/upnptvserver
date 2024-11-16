@@ -6,7 +6,7 @@
   },
   "AVaction": "Play",
   "AVInstanceID": "0000",
-  "AVCurrentURI": "http://192.168.0.212:8000/media/video/test.mp4",
+  "AVCurrentURI": "http://192.168.0.212:8000/media/video/big_buck_bunny.mp4",
   "argList": [
     {
       "key": "InstanceID",
@@ -14,10 +14,10 @@
     },
     {
       "key": "CurrentURI",
-      "value": "http://192.168.0.212:8000/media/video/test.mp4"
+      "value": "http://192.168.0.212:8000/media/video/big_buck_bunny.mp4"
     }
   ],
   "AVfilepath": "wefwfw",
-  "AVserviceType": "ewfew",
+  "AVserviceType": "",
   "AVCurrentURIMetadata": "dsfew"
 }

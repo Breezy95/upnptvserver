@@ -2,12 +2,11 @@
 #define UpnpController_hpp
 
 
-#include "Utils.hpp"
+#include "../file_server/Utils.hpp"
 
 #include "upnp/upnp.h"
 #include "upnp/UpnpString.h"
 #include "upnp/UpnpDiscovery.h" 
-#include "upnp/upnpdebug.h"
 #include <iostream>
 #include <map>
 #include <filesystem>

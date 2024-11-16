@@ -1,5 +1,13 @@
 #include "UpnpController.hpp"
 #include "Utils.hpp"
+extern "C" {
+#include <gupnp-dlna-2.0/libgupnp-dlna/gupnp-dlna.h>
+#include <gupnp-dlna-2.0/libgupnp-dlna/metadata/gupnp-dlna-metadata-extractor.h>
+#include <my_dlna_information.h>
+#include <glib.h>
+#include <gst/gst.h>
+#include <gst/pbutils/pbutils.h>
+}
 std::map<int,std::string> methodmapping {
     {ALL,"ssdp:all"},
     {ROOT,":rootdevice"},
@@ -7,6 +15,41 @@ std::map<int,std::string> methodmapping {
     {URNDEVICE, "urn:device:"},
     {URNSERVICE, "urn:service:"},
 };
+const gchar* getGuessedProfile(){
+  const gchar *filename = "/home/fabreezy/projects/upnptvserver/build/media/video/big_buck_bunny.mp4"; // Update with your file path
+    gchar *abs_path = g_canonicalize_filename(filename, NULL);
+    gchar *uri = g_strdup_printf("file://%s", abs_path);
+    g_free(abs_path);
+
+    // Initialize GError for error reporting
+    GError *error = NULL;
+
+  
+    //--------
+GUPnPDLNAProfileGuesser *guesser;
+GUPnPDLNAInformation *info = NULL;
+GUPnPDLNAProfile *guessed_profile;
+GError *gerror = NULL;
+
+// Initialize the guesser
+guesser = gupnp_dlna_profile_guesser_new(false, true);
+
+// Perform profile guessing and metadata extraction
+//file uri needs file:// as a prefix and then absolute path to file
+guessed_profile =gupnp_dlna_profile_guesser_guess_profile_sync(guesser, uri, 5000, &info,&gerror);
+
+if(error){
+  std::cout << gerror->message << std::endl;
+}
+//thats our profile name
+ const char* val =gupnp_dlna_profile_get_name(guessed_profile);
+
+ std::cout << val << gupnp_dlna_information_get_uri(info) << gupnp_dlna_video_information_get_bitrate(gupnp_dlna_information_get_video_information(info)).value <<std::endl;
+return val;
+}
+// read info from dto to get file type
+// figure out how to get metadata from files
+// figure out how to get multiple configs for tv
 std::shared_ptr<UpnpController::OutgoingResponse> UpnpController::getRangeResponse(const oatpp::String& rangeStr,
                                                                                      const oatpp::String& file) const
 {
@@ -80,15 +123,16 @@ int UpnpController::PlaybackActionHandler(Object<AVTransportDTO> dto){
     std::map<std::string, std::string> args = {
         {"InstanceID",dto->instanceID},
         {"CurrentURI",dto->currentURI},
-        {"CurrentURIMetaData", generateURIMetadata(dto)}
+       // {"CurrentURIMetaData", ixmlPrintDocument(createMetadataDocument())}
     };
     //args list should be of type oatpp::List<oatpp::Object<String>>
-
+    //IXML_Document* setUri = createSetAVTransportURIDoc(args);
+    //this->upnpManager->sendUpnpAction(actionUrl, "urn:schemas-upnp-org:service:AVTransport:1", setUri);
         for (const auto& fieldMap : *dto->argList) {
         // `fieldMap` is of type `oatpp::Fields<KVPairDTO>`
            OATPP_LOGI("KVPair"," Key: %s, Value: %s\n", fieldMap->key->c_str(), fieldMap->value->c_str());
         }
-
+ /*
     struct deviceInfo dev = {dto->device->ID, dto->device->type, dto->device->location};
     auto exists = [&](const deviceInfo &dev){
     return std::find_if(std::begin(upnpManager->known_devices),std::end(upnpManager->known_devices), [&](const deviceInfo &dInfo) { return (dInfo.id == dev.id && dInfo.location == dev.location && dInfo.type == dev.type); }) != std::end(upnpManager->known_devices); 
@@ -96,22 +140,24 @@ int UpnpController::PlaybackActionHandler(Object<AVTransportDTO> dto){
 
     if(dev.id.compare("") !=0 && dev.type.compare("")!=0 && dev.location.compare("") != 0 && !exists(dev)){
       upnpManager->known_devices.push_back(dev);
+      OATPP_LOGI("PlaybackHandler:"," device not found, adding\n");
     }
-    
-  IXML_Document* actionDoc = this->upnpManager->generatePlayBackActionDoc(dto->action->c_str(),dto->servicetype->c_str(), args);
+    */
+  IXML_Document* actionDoc = this->upnpManager->generatePlayBackActionDoc(dto->action->c_str(),"urn:schemas-upnp-org:service:AVTransport:1", args);
   //gen action url?
-  String actionURL = "";
-  this->upnpManager->sendUpnpAction(actionUrl, dto->servicetype->c_str(),actionDoc);
+
+  this->upnpManager->sendUpnpAction(actionUrl, "urn:schemas-upnp-org:service:AVTransport:1", actionDoc);
+ // ixmlDocument_free(actionDoc);
   return 1;
 };
 
 
 
 std::string UpnpController::generateURIMetadata(oatpp::web::server::api::ApiController::Object<AVTransportDTO> dto){
-std::string uri = dto->currentURI->c_str();
+std::string str_uri = dto->currentURI->c_str();
 // URI exmple http://192.168.0.212:8000/media/audio/BisexualLight.mp3"
-oatpp::network::Url parsed_uri = oatpp::network::Url::Parser::parseUrl(uri); 
-OATPP_LOGI("GENERATE URI","uri: %s,\tparsed uri:%s\n",uri.c_str(), parsed_uri.path->substr(1).c_str());
+oatpp::network::Url parsed_uri = oatpp::network::Url::Parser::parseUrl(str_uri); 
+OATPP_LOGI("GENERATE URI","uri: %s,\tparsed uri:%s\n",str_uri.c_str(), parsed_uri.path->substr(1).c_str());
 OATPP_LOGI("","action %s",dto->action->c_str());
 
  // Allocate format context
@@ -119,7 +165,7 @@ OATPP_LOGI("","action %s",dto->action->c_str());
 
     // Open media file
     if (avformat_open_input(&formatContext, parsed_uri.path->substr(1).c_str(), nullptr, nullptr) != 0) {
-        std::cerr << "Error: Couldn't open file." << std::endl;
+        std::cerr << "Error: Couldn't open file."<< parsed_uri.path->substr(1).c_str() << std::endl;
         return "";
     }
 
@@ -134,11 +180,10 @@ OATPP_LOGI("","action %s",dto->action->c_str());
     std::cout << "Format: " << formatContext->iformat->name << std::endl;
     std::cout << "Duration: " << formatContext->duration / AV_TIME_BASE << " seconds" << std::endl;
     std::cout << "Bit rate: " << formatContext->bit_rate << " bps" << std::endl;
-
     // Print stream details
-    for (unsigned int* i = 0; *i < formatContext->nb_streams; i++) {
+    for (unsigned int i = 0; i < formatContext->nb_streams; i++) {
         std::cout << "\nStream " << i << ": " << std::endl;
-        AVStream* stream = formatContext->streams[*i];
+        AVStream* stream = formatContext->streams[i];
         AVCodecParameters* codecParams = stream->codecpar;
 
 
@@ -164,11 +209,21 @@ OATPP_LOGI("","action %s",dto->action->c_str());
     avformat_close_input(&formatContext);
     avformat_free_context(formatContext);
 
+    //----------
+  
+    const gchar *filename = "/home/fabreezy/projects/upnptvserver/build/media/video/big_buck_bunny.mp4"; // Update with your file path
+    gchar *abs_path = g_canonicalize_filename(filename, NULL);
+    gchar *uri = g_strdup_printf("file://%s", abs_path);
+    g_free(abs_path);
+    getGuessedProfile();
+
+   
+
+  
+  
+
 //need uri, filetype that will match with what the tv wants, whether its audio or video
 //createMetadataDocument(uri, this->staticFileManager);
 return "asa";
 }
 
-// read info from dto to get file type
-// figure out how to get metadata from files
-// figure out how to get multiple configs for tv

@@ -1,7 +1,7 @@
 #ifndef AppComponent_hpp
 #define AppComponent_hpp
 
-#include "Utils.hpp"
+//#include "Utils.hpp"
 
 #include "oatpp/core/macro/component.hpp"
 #include "oatpp/web/server/HttpConnectionHandler.hpp"
@@ -52,7 +52,7 @@ public:
   }());
   
   OATPP_CREATE_COMPONENT(std::shared_ptr<StaticFilesManager>, staticFilesManager)([] {
-    return std::make_shared<StaticFilesManager>((std::filesystem::current_path() / "media").c_str()); 
+    return std::make_shared<StaticFilesManager>((std::filesystem::current_path().parent_path() / "media").c_str()); 
   }());
 
    OATPP_CREATE_COMPONENT(std::shared_ptr<UPnPDeviceManager>, upnpManager)([] {
